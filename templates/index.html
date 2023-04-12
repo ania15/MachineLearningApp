@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Machine Learning</title>
+</head>
+<body>
+	<h1>Choose your Machine Learning model to perform a prediction on covtype.data</h1>
+	<form method="POST">
+		<label for="model">Select a model:</label>
+		<select id="model" name="model">
+			<option value="Heuristic">Heuristic</option>
+			<option value="Logistic Regression">Logistic Regression</option>
+			<option value="Decision Tree">Decision Tree</option>
+			<option value="Neural Network">Neural Network</option>
+		</select>
+		<input type="submit" value="Submit">
+	</form>
+	{% if prediction %}
+    <p>Prediction: {{ prediction }}</p>
+    {% endif %}
+</body>
+</html>
