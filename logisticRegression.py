@@ -3,12 +3,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from evaluation import evaluate
+
+
 def lr_clf(data):
     """
     Creates and trains a baseline model based on Logistic Regression algorithm.
     :param data: dataset
-    :return lr_preds: predictions
-    """""
+    :return lr_model: trained model
+    """
     X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data.iloc[:, -1], test_size=0.25,
                                                         random_state=42)
     scaler = StandardScaler()
@@ -17,5 +19,5 @@ def lr_clf(data):
     lr_model = LogisticRegression()
     lr_model.fit(X_train_scaled, y_train)
     lr_preds = lr_model.predict(X_test_scaled)
-    evaluate(lr_preds)
-    return lr_preds
+    evaluate(lr_preds, y_test)
+    return lr_model

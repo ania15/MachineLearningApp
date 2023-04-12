@@ -1,11 +1,12 @@
-def heuristic_clf(data):
+import numpy as np
+
+def heuristic_clf(data, means):
     """
     Performs heuristic classification on dataset.
-    :param data: dataset
-    :return: classified data
+    :param data: dataset without Cover_Type column
+    :param means: array of mean values for each cover type
+    :return: predicted cover types
     """
-    majority_class = data[54].value_counts().idxmax()
-    data['predicted_class'] = majority_class
-    accuracy = (data[54] == data['predicted_class']).mean()
-    print('Accuracy:', accuracy)
-    return data['predicted_class'].unique()
+    distances = np.sqrt(np.sum((data.values[:, :] - means[:, :]) ** 2, axis=1))
+    predicted_classes = np.argmin(distances, axis=0) + 1
+    return predicted_classes

@@ -1,6 +1,6 @@
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from evaluation import evaluate
-
 
 def dt_clf(data):
     """
@@ -13,5 +13,5 @@ def dt_clf(data):
     dt_model = DecisionTreeClassifier()
     dt_model.fit(X_train, y_train)
     dt_preds = dt_model.predict(X_test)
-    evaluate(dt_preds)
-    return dt_preds
+    evaluate(dt_preds, y_test)
+    return dt_model
