@@ -1,11 +1,59 @@
+from keras.layers import Dropout
+from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.utils import to_categorical
 from evaluation import evaluate_nn
 import numpy as np
+import tensorflow as tf
 
-# Train a neural network model
+
+def find_best_hyperparameters(X_train, y_train, X_val, y_val):
+    """
+    Creates Neural Network model
+    :param input_shape: the initial input shape
+    :param num_classes: number of classes
+    :return best_params
+    """
+    best_score = 0
+    best_params = {}
+    for lr in [0.001, 0.01, 0.1]:
+        for batch_size in [32, 64, 128]:
+                print('im here')
+                model = create_nn_model(X_train.shape[1:], num_classes=len(np.unique(y_train)))
+                model.compile(optimizer=Adam(learning_rate=lr), loss='sparse_categorical_crossentropy',
+                              metrics=['accuracy'])
+                history = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=batch_size, epochs=10,
+                                    verbose=0)
+                score = history.history['val_accuracy'][-1]
+                if score > best_score:
+                    best_score = score
+                    best_params = {'lr': lr, 'batch_size': batch_size}
+    print(f'Best score: {best_score}')
+    print(f'Best hyperparameters: {best_params}')
+    return best_params
+
+
+def plot_best_hyperparameters(history):
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model Accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper left')
+    plt.show()
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model Loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper left')
+    plt.show()
+
+
 def create_nn_model(input_shape, num_classes):
     """
     Creates Neural Network model
@@ -19,46 +67,51 @@ def create_nn_model(input_shape, num_classes):
     model.add(Dense(num_classes, activation='softmax'))
     return model
 
-def train_nn_model(X_train, y_train, X_val, y_val, input_shape, num_classes, learning_rate=0.001, batch_size=32, epochs=10):
+
+def train_nn_model(data):
     """
     Trains Neural Network model
-    :param X_train: Input features for training data
-    :param y_train: Target labels for training data
-    :param X_val: Input features for validation data
-    :param y_val: Target labels for validation data
-    :param input_shape: Shape of the input data
-    :param num_classes: Number of classes for the target variable
-    :param learning_rate: Learning rate for the optimizer (default is 0.001)
-    :param batch_size: Number of samples per batch for training (default is 32)
-    :param epochs: Number of epochs to train the model for (default is 10)
-    :return: trained model, training history, and predictions on validation set
+    :param data: dataset on which the model will be trained
+    :return: trained model
     """
+    # Split the dataset into features and labels
+    X = data.iloc[:, :-1].values
+    y = data.iloc[:, -1].values
 
-    # Split the dataset into training, validation, and test sets
-    X_test, y_test = X_val[:len(X_val)//2], y_val[:len(X_val)//2]
-    X_val, y_val = X_val[len(X_val)//2:], y_val[len(X_val)//2:]
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Create the model
-    model = create_nn_model(input_shape, num_classes)
+    # Scale the features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Encode the labels
+    encoder = LabelEncoder()
+    y_train = encoder.fit_transform(y_train)
+    y_test = encoder.transform(y_test)
+
+    # Define the neural network architecture
+    model = Sequential([
+        Dense(128, activation="relu", input_shape=(X_train.shape[1],)),
+        Dropout(0.2),
+        Dense(64, activation="relu"),
+        Dropout(0.2),
+        Dense(7, activation="softmax")
+    ])
 
     # Compile the model
-    optimizer = Adam(lr=learning_rate)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-
-    # Convert the target variable to one-hot encoding
-    y_train = to_categorical(y_train, num_classes)
-    y_val = to_categorical(y_val, num_classes)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"]
+    )
 
     # Train the model
-    history = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=batch_size, epochs=epochs)
+    history = model.fit(X_train, y_train, epochs=10, batch_size=128, validation_data=(X_test, y_test))
 
-    # Make predictions on the validation set
-    predictions = np.argmax(model.predict(X_val), axis=-1)
+    # Evaluate the model
+    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
+    print("Test accuracy:", test_acc)
 
-    # Evaluate the model on the test set
-    y_test = to_categorical(y_test, num_classes)
-    test_loss, test_acc = model.evaluate(X_test, y_test)
-    print(f'Test loss = {test_loss} and test accuracy = {test_acc}')
-    evaluate_nn(predictions, history, y_test)
-    # Return the trained model, training history, and predictions on validation set
     return model

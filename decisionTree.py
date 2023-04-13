@@ -5,8 +5,9 @@ from evaluation import evaluate
 def dt_clf(data):
     """
     Creates and trains a baseline model based on Decision Tree algorithm.
-    :param data: dataset
-    :return dt_preds: predictions
+    This algorithm does not need data scaling/normalizing.
+    :param data: dataset on which the model will be trained
+    :return dt_model: trained model
     """
     X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data.iloc[:, -1], test_size=0.25,
                                                         random_state=42)
