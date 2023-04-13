@@ -8,6 +8,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 import numpy as np
 
+
 def build_model(input_shape, num_classes, dropout_rate=0.2, activation="relu", optimizer="adam"):
     """
     Builds a Keras neural network model with the given hyperparameters.
@@ -37,7 +38,8 @@ def build_model(input_shape, num_classes, dropout_rate=0.2, activation="relu", o
     )
     return model
 
-def find_best_hyperparams(X, y, num_classes, n_iter=4, cv=3, epochs=6, batch_size=128):
+
+def find_best_hyperparameters(X, y, num_classes, n_iter=4, cv=3, epochs=6, batch_size=128):
     """
     Finds the best hyperparameters for a Keras neural network model using random search.
     :param X: Input data
@@ -59,7 +61,8 @@ def find_best_hyperparams(X, y, num_classes, n_iter=4, cv=3, epochs=6, batch_siz
     }
 
     # Creating a classifier and performing randomized search
-    keras_clf = KerasClassifier(build_fn=build_model, input_shape=input_shape, num_classes=num_classes, epochs=epochs, batch_size=batch_size, verbose=0)
+    keras_clf = KerasClassifier(build_fn=build_model, input_shape=input_shape, num_classes=num_classes, epochs=epochs,
+                                batch_size=batch_size, verbose=0)
     random_search = RandomizedSearchCV(keras_clf, param_distributions=param_distribs, n_iter=n_iter, cv=cv, verbose=2)
     random_search.fit(X, y)
     return random_search.best_params_
@@ -91,7 +94,7 @@ def train_nn_model(data):
     :return: trained model
     """
     # Splitting data into training and test sets, scaling the features and encoding labels
-    X =data.iloc[:, :-1].values
+    X = data.iloc[:, :-1].values
     y = data.iloc[:, -1].values
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     scaler = StandardScaler()
@@ -105,7 +108,7 @@ def train_nn_model(data):
     idx = np.random.choice(X.shape[0], size=int(X.shape[0] * 0.01), replace=False)
     X_sample = X[idx]
     y_sample = y[idx]
-    best_params = find_best_hyperparams(X_sample, y_sample, num_classes=7)
+    best_params = find_best_hyperparameters(X_sample, y_sample, num_classes=7)
 
     # Building and training the model on the full dataset based on the best hyperparameters
     # with early stopping

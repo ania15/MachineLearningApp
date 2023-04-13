@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from evaluation import evaluate
 
+
 def dt_clf(data):
     """
     Creates and trains a baseline model based on Decision Tree algorithm.

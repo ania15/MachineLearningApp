@@ -1,6 +1,7 @@
-from matplotlib import pyplot as plt
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
+
+from heuristic import heuristic_clf
 
 
 def evaluate(y_pred, y_test):
@@ -19,4 +20,17 @@ def evaluate(y_pred, y_test):
     print(f"Confusion Matrix:\n{conf_matrix}")
 
 
+def evaluate_heu(data):
+    """
+    Evaluates the performance of a simple heuristic on the whole dataset.
+    The data is not normalized because the Cover_type is predicted (1-7).
+    :param data: dataset on which the heuristic will be eavluated
+    """
+    # Extracting only test data for the evaluation purposes
+    train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
+    X_test = test_data.drop('Cover_Type', axis=1)
+    y_test = test_data['Cover_Type']
 
+    # Applying the algorithm on test set and evaluating
+    X_test['Heuristic_Cover_Type'] = heuristic_clf(X_test)
+    evaluate(X_test['Heuristic_Cover_Type'], y_test)

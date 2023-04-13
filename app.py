@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 from flask import Flask, request
-from heuristic import heuristic_clf, evaluate_heu
+from heuristic import heuristic_clf
 from logisticRegression import lr_clf
 from decisionTree import dt_clf
 from neuralNetwork import train_nn_model
-
+from evaluation import evaluate_heu
 
 app = Flask(__name__)
 
@@ -13,10 +13,10 @@ app = Flask(__name__)
 url = "https://archive.ics.uci.edu/ml/machine-learning-databases/covtype/covtype.data.gz"
 data = pd.read_csv(url, header=None)
 cols = ['Elevation', 'Aspect', 'Slope', 'Horizontal_Distance_To_Hydrology',
-                'Vertical_Distance_To_Hydrology', 'Horizontal_Distance_To_Roadways',
-                'Hillshade_9am', 'Hillshade_Noon', 'Hillshade_3pm',
-                'Horizontal_Distance_To_Fire_Points'] + [f'Wilderness_Area_{i}' for i in range(1, 5)] \
-               + [f'Soil_Type_{i}' for i in range(1, 41)] + ['Cover_Type']
+        'Vertical_Distance_To_Hydrology', 'Horizontal_Distance_To_Roadways',
+        'Hillshade_9am', 'Hillshade_Noon', 'Hillshade_3pm',
+        'Horizontal_Distance_To_Fire_Points'] + [f'Wilderness_Area_{i}' for i in range(1, 5)] \
+       + [f'Soil_Type_{i}' for i in range(1, 41)] + ['Cover_Type']
 data.columns = cols
 
 # Preparing and evaluating the models
@@ -25,6 +25,7 @@ evaluate_heu(data)
 dt_model = dt_clf(data)
 lr_model = lr_clf(data)
 nn_model = train_nn_model(data)
+
 
 # REST API
 @app.route('/predict', methods=['POST'])
@@ -47,4 +48,3 @@ def predict():
         return str(pred)
     else:
         return "The model you chose does not exist."
-
