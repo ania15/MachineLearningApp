@@ -15,6 +15,8 @@ Models are evaluated thorugh some standard metrics (Accuracy, Classification Rep
 
 There is a REST API serving the models created with Flask.
 
+All of the dependencies can be found in the requirements.txt file.
+
 # Usage
 
 User can choose a model and get a prediction by HTTP request. In order to that it is necessary to deliver input features:
