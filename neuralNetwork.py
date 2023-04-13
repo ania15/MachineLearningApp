@@ -1,71 +1,87 @@
+from keras.callbacks import EarlyStopping
 from keras.layers import Dropout
+from keras.wrappers.scikit_learn import KerasClassifier
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
-from evaluation import evaluate_nn
 import numpy as np
-import tensorflow as tf
 
+def build_model(input_shape, num_classes, dropout_rate=0.2, activation="relu", optimizer="adam"):
+    """
+    Builds a Keras neural network model with the given hyperparameters.
 
-def find_best_hyperparameters(X_train, y_train, X_val, y_val):
+    :param input_shape: Shape of the input data.
+    :param num_classes: Number of classes in the target labels.
+    :param dropout_rate: optional (default=0.2) Dropout rate to use between layers.
+    :param activation: optional (default='relu') Activation function to use in the hidden layers.
+    :param optimizer: optional (default='adam') Optimizer to use during training.
+    :return: a Keras Sequential model object.
     """
-    Creates Neural Network model
-    :param input_shape: the initial input shape
-    :param num_classes: number of classes
-    :return best_params
+
+    # Defining the layers
+    model = Sequential([
+        Dense(128, activation=activation, input_shape=input_shape),
+        Dropout(dropout_rate),
+        Dense(64, activation=activation),
+        Dropout(dropout_rate),
+        Dense(num_classes, activation="softmax")
+    ])
+
+    # Compiling the model
+    model.compile(
+        optimizer=optimizer,
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+    return model
+
+def find_best_hyperparams(X, y, num_classes, n_iter=4, cv=3, epochs=6, batch_size=128):
     """
-    best_score = 0
-    best_params = {}
-    for lr in [0.001, 0.01, 0.1]:
-        for batch_size in [32, 64, 128]:
-                print('im here')
-                model = create_nn_model(X_train.shape[1:], num_classes=len(np.unique(y_train)))
-                model.compile(optimizer=Adam(learning_rate=lr), loss='sparse_categorical_crossentropy',
-                              metrics=['accuracy'])
-                history = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=batch_size, epochs=10,
-                                    verbose=0)
-                score = history.history['val_accuracy'][-1]
-                if score > best_score:
-                    best_score = score
-                    best_params = {'lr': lr, 'batch_size': batch_size}
-    print(f'Best score: {best_score}')
-    print(f'Best hyperparameters: {best_params}')
-    return best_params
+    Finds the best hyperparameters for a Keras neural network model using random search.
+    :param X: Input data
+    :param y: Target labels.
+    :param num_classes: Number of classes in the target labels.
+    :param n_iter: optional (default=5) Number of parameter settings that are sampled.
+    :param cv: optional (default=2) Determines the cross-validation splitting strategy.
+    :param epochs: int, optional (default=10) Number of epochs to train the model.
+    :param batch_size: optional (default=128) Batch size used during training.
+    :return: dictionary containing the best hyperparameters found by random search.
+    """
+    input_shape = X.shape[1:]
+
+    # Defining the hyperparameters
+    param_distribs = {
+        "dropout_rate": [0.1, 0.2, 0.3],
+        "activation": ["relu", "elu"],
+        "optimizer": ["adam", "rmsprop"]
+    }
+
+    # Creating a classifier and performing randomized search
+    keras_clf = KerasClassifier(build_fn=build_model, input_shape=input_shape, num_classes=num_classes, epochs=epochs, batch_size=batch_size, verbose=0)
+    random_search = RandomizedSearchCV(keras_clf, param_distributions=param_distribs, n_iter=n_iter, cv=cv, verbose=2)
+    random_search.fit(X, y)
+    return random_search.best_params_
 
 
 def plot_best_hyperparameters(history):
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_accuracy'])
-    plt.title('Model Accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    plt.show()
-
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    plt.show()
-
-
-def create_nn_model(input_shape, num_classes):
     """
-    Creates Neural Network model
-    :param input_shape: the initial input shape
-    :param num_classes: number of classes
-    :return model: created model
+    Plots the best neural network parameters
+    :param history: dictionary containing information about the training process of the model
     """
-    model = Sequential()
-    model.add(Dense(64, input_shape=input_shape, activation='relu'))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(num_classes, activation='softmax'))
-    return model
+
+    # Plotting accuracy and loss
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+    ax[0].plot(history.history['accuracy'])
+    ax[0].plot(history.history['val_accuracy'])
+    ax[0].set(title='Model Accuracy', ylabel='Accuracy', xlabel='Epoch')
+    ax[0].legend(['Train', 'Validation'], loc='upper right')
+    ax[1].plot(history.history['loss'])
+    ax[1].plot(history.history['val_loss'])
+    ax[1].set(title='Model Loss', ylabel='Loss', xlabel='Epoch')
+    ax[1].legend(['Train', 'Validation'], loc='upper right')
+    plt.show()
 
 
 def train_nn_model(data):
@@ -74,44 +90,35 @@ def train_nn_model(data):
     :param data: dataset on which the model will be trained
     :return: trained model
     """
-    # Split the dataset into features and labels
-    X = data.iloc[:, :-1].values
+    # Splitting data into training and test sets, scaling the features and encoding labels
+    X =data.iloc[:, :-1].values
     y = data.iloc[:, -1].values
-
-    # Split the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Scale the features
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
-
-    # Encode the labels
     encoder = LabelEncoder()
     y_train = encoder.fit_transform(y_train)
     y_test = encoder.transform(y_test)
 
-    # Define the neural network architecture
-    model = Sequential([
-        Dense(128, activation="relu", input_shape=(X_train.shape[1],)),
-        Dropout(0.2),
-        Dense(64, activation="relu"),
-        Dropout(0.2),
-        Dense(7, activation="softmax")
-    ])
+    # Finding best parameters on a sample set - the original set is too big
+    idx = np.random.choice(X.shape[0], size=int(X.shape[0] * 0.01), replace=False)
+    X_sample = X[idx]
+    y_sample = y[idx]
+    best_params = find_best_hyperparams(X_sample, y_sample, num_classes=7)
 
-    # Compile the model
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss="sparse_categorical_crossentropy",
-        metrics=["accuracy"]
-    )
+    # Building and training the model on the full dataset based on the best hyperparameters
+    # with early stopping
+    model = build_model(X_train.shape[1:], num_classes=7, **best_params)
+    early_stopping = EarlyStopping(patience=5, restore_best_weights=True)
+    model.fit(X_train, y_train, epochs=6, batch_size=128, validation_data=(X_test, y_test),
+              callbacks=[early_stopping])
+    history = model.fit(X_train, y_train, epochs=6, batch_size=128, validation_data=(X_test, y_test))
 
-    # Train the model
-    history = model.fit(X_train, y_train, epochs=10, batch_size=128, validation_data=(X_test, y_test))
-
-    # Evaluate the model
+    # Evaluating the model
+    print('Neural Network model evaluation')
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=2)
     print("Test accuracy:", test_acc)
-
+    print("Test loss:", test_loss)
+    plot_best_hyperparameters(history)
     return model

@@ -2,7 +2,6 @@ from random import random
 from sklearn.model_selection import train_test_split
 from evaluation import evaluate
 
-
 def heuristic_clf(data):
     """
     Performs a simple heuristic that classifies the data.
@@ -10,6 +9,8 @@ def heuristic_clf(data):
     :param data: data to be classified
     :param cover_type: predicted cover_type
     """
+
+    # Performing a simple classification based on Elevation value
     cover_type = []
     for index, row in data.iterrows():
         if row['Elevation'] > 3000:
