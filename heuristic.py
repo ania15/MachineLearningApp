@@ -6,7 +6,7 @@ def heuristic_clf(data):
     Performs a simple heuristic that classifies the data.
     It is not accurate, based only on author's observations.
     :param data: data to be classified
-    :param cover_type: predicted cover_type
+    :return cover_type: predicted cover_type
     """
 
     # Performing a simple classification based on Elevation value

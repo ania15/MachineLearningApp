@@ -11,20 +11,11 @@ This app contains 4 Machine Learning models based on the algorithms listed below
 The data that the models have been trained on can be found here: https://archive.ics.uci.edu/ml/datasets/Covertype.
 The target variable is Cover_type and the rest of the variables are features used to predict it.
 
-Models are evaluated thorugh some standard metrics (Accuracy, Classification Report, Confusion Matrix, Loss) accordingly to their characteristics.
+Models are evaluated through some standard metrics (Accuracy, Classification Report, Confusion Matrix, Loss) accordingly to their characteristics.
 
 There is a REST API serving the models created with Flask.
 
 All of the dependencies can be found in the requirements.txt file.
-
-## Docker Image
-
-Prerequisities: Docker installed.
-
-Building an image: docker build -t api-image .
-Running the image: docker run -p 5000:5000 api-image
-
-This command starts a Docker container using the `api-image` image and maps port 5000 on the host machine to port 5000 inside the container. It enables making requests to the API by accessing http://localhost:5000/predict.
 
 ## Usage
 
