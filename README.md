@@ -41,7 +41,7 @@ Below an example of usage by Postman App can be found:
 
 You can find the body in the sample.json file. After clicking **SEND** the prediction appears below:
 
-![image](https://user-images.githubusercontent.com/74561797/231744130-0aeea8b0-7e8f-4ea4-be4d-73468a7175df.png)
+![cover_type](https://user-images.githubusercontent.com/74561797/231973879-c10c26ad-5a62-41a4-87a9-04ead8a039dc.png)
 
 However, the HTTP Request can be done any other way preferred by user (for example curl command).
 
