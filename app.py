@@ -47,3 +47,7 @@ def predict():
         return 'Predicted Cover_type: ' + str(pred)
     else:
         return "The model you chose does not exist."
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
