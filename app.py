@@ -26,7 +26,6 @@ dt_model = dt_clf(data)
 lr_model = lr_clf(data)
 nn_model = train_nn_model(data)
 
-
 # REST API
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -35,16 +34,16 @@ def predict():
     body = pd.DataFrame([body])
     if selected_model == 'Heuristic':
         pred = heuristic_clf(body)
-        return str(pred)
+        return 'Predicted Cover_type: ' + str(pred[0])
     elif selected_model == 'Logistic Regression':
         pred = lr_model.predict(body)
-        return str(pred)
+        return 'Predicted Cover_type: ' + str(pred[0])
     elif selected_model == 'Decision Tree':
         pred = dt_model.predict(body)
-        return str(pred)
+        return 'Predicted Cover_type: ' + str(pred[0])
     elif selected_model == 'Neural Network':
         pred = nn_model.predict(body)
         pred = np.argmax(pred) + 1
-        return str(pred)
+        return 'Predicted Cover_type: ' + str(pred)
     else:
         return "The model you chose does not exist."
